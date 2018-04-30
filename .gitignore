@@ -1,0 +1,11 @@
+admin_password
+inventory.cfg
+certificates/*
+.terraform/
+secrets.tf
+terraform.tfplan
+terraform.tfstate
+terraform.tfstate.backup
+.terraform.tfstate.lock.info
+.vscode/
+*.retry

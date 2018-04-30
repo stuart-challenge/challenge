@@ -1,0 +1,57 @@
+# Prep a CentOS 7 image for OpenShift Origin.
+---
+- name: Prepare all hosts for OpenShift Origin
+  hosts: all
+  gather_facts: false
+  become: true
+  tasks:
+    - name: Update all packages
+      yum:
+        name: '*'
+        state: latest
+
+    - name: Ensure required packages are installed
+      yum:
+        name: "{{ item }}"
+      with_items:
+        - wget
+        - git
+        - net-tools
+        - bind-utils
+        - iptables-services
+        - bridge-utils
+        - bash-completion
+        - kexec-tools
+        - sos
+        - psacct
+        - atomic
+        - docker-1.13.1
+        - NetworkManager
+
+    - name: Remove pre-existing Docker storage setup
+      lineinfile:
+        dest: /etc/sysconfig/docker-storage-setup
+        line: "{{ item }}"
+        state: absent
+      with_items:
+        - CONTAINER_THINPOOL=docker-pool
+        - STORAGE_DRIVER=overlay2
+
+    - name: Create Docker storage setup file
+      blockinfile:
+        dest: /etc/sysconfig/docker-storage-setup
+        block: |
+          DEVS="{{ docker_device }}"
+          VG=docker-vg
+
+    - name: Setup Docker storage
+      command: docker-storage-setup
+
+    - name: Enable and Start Docker and NetworkManager services
+      service:
+        name: "{{ item }}"
+        enabled: true
+        state: started
+      with_items:
+        - docker
+        - NetworkManager
